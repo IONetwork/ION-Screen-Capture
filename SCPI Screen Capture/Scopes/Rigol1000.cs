@@ -44,19 +44,19 @@ namespace SCPI.Scopes {
             command += (color ? "ON" : "OFF") + ",";
             command += (invert ? "ON" : "OFF") + ",";
             switch (format) {
-                case Global.BMP24:
+                case Oscilloscope.BMP24:
                 command += BMP24;
                 break;
-                case Global.BMP8:
+                case Oscilloscope.BMP8:
                 command += BMP8;
                 break;
-                case Global.JPEG:
+                case Oscilloscope.JPEG:
                 command += JPEG;
                 break;
-                case Global.PNG:
+                case Oscilloscope.PNG:
                 command += PNG;
                 break;
-                case Global.TIFF:
+                case Oscilloscope.TIFF:
                 command += TIFF;
                 break;
                 default:
@@ -64,24 +64,24 @@ namespace SCPI.Scopes {
                 break;
             }
 
-            Global.tc.WriteLine(command);
+            Oscilloscope.telnetCon.WriteLine(command);
             int buffer_size = Read_TMC_Blockheader();
             byte[] buffer = new byte[buffer_size];
             for (int i = 0; i < buffer_size; i++)
-                buffer[i] = Global.tc.ReadByte();
-            Global.tc.ReadByte(); //4. The terminator '\n'(0X0A) at the end of the data should be removed.
+                buffer[i] = Oscilloscope.telnetCon.ReadByte();
+            Oscilloscope.telnetCon.ReadByte(); //4. The terminator '\n'(0X0A) at the end of the data should be removed.
             return buffer;
         }
 
 
         public static int Read_TMC_Blockheader() {
             int bytesToRead = 0;
-            byte b = Global.tc.ReadByte();
+            byte b = Oscilloscope.telnetCon.ReadByte();
 
             if ((char)b == '#') {
-                int numDigits = Global.tc.ReadByte() - 49;
+                int numDigits = Oscilloscope.telnetCon.ReadByte() - 49;
                 for (int i = numDigits; i > -1; i--)
-                    bytesToRead += (Global.tc.ReadByte() - 48) * (int)Math.Pow(10, i);
+                    bytesToRead += (Oscilloscope.telnetCon.ReadByte() - 48) * (int)Math.Pow(10, i);
             }
             return bytesToRead;
         }

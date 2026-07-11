@@ -4,114 +4,183 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using System.Windows.Input;
 
-namespace SCPI {
-    public partial class Form1:Form {
+namespace SCPI
+{
+    public partial class Form1 : Form
+    {
 
-        public Form1() {
+        public Form1()
+        {
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e) {
-            try {
-                Properties.Settings.Default.Extension = (byte)cBox_Extension.SelectedIndex;
-                Properties.Settings.Default.Color = chBox_Color.Checked;
-                Properties.Settings.Default.Invert = chBox_Invert.Checked;
-                Properties.Settings.Default.Path = TextBoxFilePath.Text;
-                Properties.Settings.Default.Save();
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
 
-                if (Global.tc.IsOpen) {
-                    byte[] data = Rigol1000.getScreenCapture((byte)cBox_Extension.SelectedIndex, chBox_Color.Checked, chBox_Invert.Checked);
-                    string filename = DateTime.Now.ToString(new CultureInfo("de-DE")).Replace(":", ".") + "." + Rigol1000.extensions[cBox_Extension.SelectedIndex];
-                    File.WriteAllBytes(TextBoxFilePath.Text + filename, data);
-                } else
-                    MessageBox.Show("Telnet is closed");
-
-            } catch (Exception ec) {
-                Console.WriteLine(ec.ToString());
-            }
+        protected override void OnLoad(EventArgs e)
+        {
+            var btn = new Button();
+            btn.Size = new Size(25, TextBoxFilePath.ClientSize.Height + 2);
+            btn.Location = new Point(TextBoxFilePath.ClientSize.Width - btn.Width, -1);
+            btn.Cursor = System.Windows.Forms.Cursors.Default;
+            btn.Click += btn_Click;
+            TextBoxFilePath.Controls.Add(btn);
+            // Send EM_SETMARGINS to prevent text from disappearing underneath the button
+            SendMessage(TextBoxFilePath.Handle, 0xd3, (IntPtr)2, (IntPtr)(btn.Width << 16));
+            btn.Text = "···";
+            // Make the text inside the button bold
+            // TODO            
+            base.OnLoad(e);
         }
 
-        private void Form1_Load(object sender, EventArgs e) {
-            try {
-                Global.tc = new Telnet.TelnetCon();
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                // Set the title of the form to disconnected
+                this.Text = "SCPI Screen Capture";
 
-                if (Properties.Settings.Default.Path == "") {
+                // Initialize the Telnet Connection object
+                Oscilloscope.telnetCon = new Telnet.TelnetCon();
+
+                // If no path is stored, set the default path to MyPictures
+                if (Properties.Settings.Default.Path == "")
+                {
                     Properties.Settings.Default.Path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures) + "\\";
                     Properties.Settings.Default.Save();
                 }
 
+                // Load last path from stored settings
                 TextBoxFilePath.Text = Properties.Settings.Default.Path;
 
-                IP1.Value = Properties.Settings.Default.IP1;
-                IP2.Value = Properties.Settings.Default.IP2;
-                IP3.Value = Properties.Settings.Default.IP3;
-                IP4.Value = Properties.Settings.Default.IP4;
+                // Load last IP from stored settings
+                IP_Field1.SetIP(Properties.Settings.Default.IP);
 
                 cBox_Extension.SelectedIndex = Properties.Settings.Default.Extension;
                 chBox_Color.Checked = Properties.Settings.Default.Color;
                 chBox_Invert.Checked = Properties.Settings.Default.Invert;
 
-                Global.tc.Open(Properties.Settings.Default.IP);
-                this.Text = "SCPI Screen Capture - " + Global.tc.Hostname;
+                // Try to connect to the last IP with very short timeout
+                Oscilloscope.telnetCon.Open(Properties.Settings.Default.IP, 20);
+                toolstrip_StatusLabel.Text = "Connected : " + Oscilloscope.telnetCon.Hostname;
                 btn_connect.Text = "Disconnect";
-            } catch (Exception ex) {
-                this.Text = "SCPI Screen Capture - Disconnected";
+            }
+            catch (Exception ex)
+            {
+                toolstrip_StatusLabel.Text = "Disconnected";
             }
         }
 
-        private void btn_Click(object sender, EventArgs e) {
+        private void button1_Click(object sender, EventArgs e)
+        {
+            // Save the settings
+            try
+            {
+                Properties.Settings.Default.Extension = (byte)cBox_Extension.SelectedIndex;
+                Properties.Settings.Default.Color = chBox_Color.Checked;
+                Properties.Settings.Default.Invert = chBox_Invert.Checked;
+                Properties.Settings.Default.Path = TextBoxFilePath.Text;
+                Properties.Settings.Default.Copy = chBox_Copy.Checked;
+                Properties.Settings.Default.Save = chBox_Save.Checked;
+                Properties.Settings.Default.HotKey = chBox_HotKey.Checked;
+                Properties.Settings.Default.Save();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+            // Get the screen capture
+            try
+            {
+                if (Oscilloscope.telnetCon.IsOpen)
+                {
+                    // Get the screen capture data
+                    byte[] data = Rigol1000.getScreenCapture((byte)cBox_Extension.SelectedIndex, chBox_Color.Checked, chBox_Invert.Checked);
+
+                    // Copy to clipboard
+                    if (chBox_Copy.Checked)
+                    {
+                        Bitmap bitmap = new Bitmap(new MemoryStream(data));
+                        Clipboard.SetData(DataFormats.Bitmap, bitmap);
+                        // Play a beep sound to indicate that the image is copied to the clipboard
+                        System.Media.SystemSounds.Beep.Play();
+                    }
+
+                    // Save to file
+                    if (chBox_Save.Checked)
+                    {
+                        string filename = DateTime.Now.ToString(new CultureInfo("de-DE")).Replace(":", ".") + "." + Rigol1000.extensions[cBox_Extension.SelectedIndex];
+                        File.WriteAllBytes(TextBoxFilePath.Text + filename, data);
+                    }
+
+                }
+                else
+                    MessageBox.Show("Telnet is closed");
+
+            }
+            catch (Exception ec)
+            {
+                Console.WriteLine(ec.ToString());
+            }
+        }
+
+
+
+        private void btn_Click(object sender, EventArgs e)
+        {
 
             FolderBrowserDialog fbd = new FolderBrowserDialog();
             DialogResult result = fbd.ShowDialog();
 
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+            {
                 Properties.Settings.Default.Path = fbd.SelectedPath + "\\";
                 Properties.Settings.Default.Save();
                 TextBoxFilePath.Text = Properties.Settings.Default.Path;
             }
         }
 
-        protected override void OnLoad(EventArgs e) {
-            var btn = new Button();
-            btn.Size = new Size(25, TextBoxFilePath.ClientSize.Height + 2);
-            btn.Location = new Point(TextBoxFilePath.ClientSize.Width - btn.Width, -1);
-            btn.Cursor = Cursors.Default;
-            //btn.Image = Properties.Resources.arrow_diagright;
-            btn.Click += btn_Click;
-            TextBoxFilePath.Controls.Add(btn);
-            // Send EM_SETMARGINS to prevent text from disappearing underneath the button
-            SendMessage(TextBoxFilePath.Handle, 0xd3, (IntPtr)2, (IntPtr)(btn.Width << 16));
-            base.OnLoad(e);
-        }
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
-
-        private void connectionToolStripMenuItem_Click(object sender, EventArgs e) {
-            MessageBox.Show("By Stefanos Tselepis\rAlpha 0.0.1");
-        }
-
-        private void btn_connect_Click(object sender, EventArgs e) {
-            if (Global.tc.IsOpen) {
-                Global.tc.Dispose();
+        private void btn_connect_Click(object sender, EventArgs e)
+        {
+            if (Oscilloscope.telnetCon.IsOpen)
+            {
+                Oscilloscope.telnetCon.Dispose();
                 btn_connect.Text = "Connect";
-                this.Text = "SCPI Screen Capture - Disconnected";
-            } else {
-                try {
-                    string hostName = IP1.Value + "." + IP2.Value + "." + IP3.Value + "." + IP4.Value;
-                    Global.tc.Open(hostName);
+                toolstrip_StatusLabel.Text = "Disconnected";
+            }
+            else
+            {
+                try
+                {
+                    string hostName = IP_Field1.GetIP();
+                    // Try to open telnet with respective timeout
+                    Oscilloscope.telnetCon.Open(hostName, 5000);
                     Properties.Settings.Default.IP = hostName;
-                    Properties.Settings.Default.IP1 = Convert.ToByte(IP1.Value);
-                    Properties.Settings.Default.IP2 = Convert.ToByte(IP2.Value);
-                    Properties.Settings.Default.IP3 = Convert.ToByte(IP3.Value);
-                    Properties.Settings.Default.IP4 = Convert.ToByte(IP4.Value);
                     Properties.Settings.Default.Save();
                     btn_connect.Text = "Disconnect";
-                    this.Text = "SCPI Screen Capture - " + Global.tc.Hostname;
-                } catch (Exception ex) {
+                    toolstrip_StatusLabel.Text = "Connected : " + Oscilloscope.telnetCon.Hostname;
+                    btn_capture.Focus();
+                }
+                catch (Exception ex)
+                {
                     MessageBox.Show("Connection Failed");
                 }
+            }
+        }
+
+        private void chBox_HotKey_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chBox_HotKey.Checked)
+            {
+                //GlobalHotKey.RegisterHotKey("Ctrl + PrintScreen", () => button1_Click(null, null));
+                GlobalHotKey.RegisterHotKey(System.Windows.Input.ModifierKeys.Control, Key.PrintScreen, () => button1_Click(null, null));
+            }
+            else
+            {
+                GlobalHotKey.DisposeAllHotkeys();
             }
         }
     }

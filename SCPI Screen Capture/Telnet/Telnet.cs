@@ -17,11 +17,6 @@ namespace SCPI.Telnet {
         public event ConnectionDelegate Closed;
         public bool IsOpen { get { return m_IsOpen; } }
         public TelnetCon() { }
-        public TelnetCon(bool open) : this("localhost", true) { }
-        public TelnetCon(string host, bool open) {
-            if (open)
-                Open(host);
-        }
 
         void CheckOpen() {
             if (!IsOpen)
@@ -65,16 +60,36 @@ namespace SCPI.Telnet {
             return (byte)m_Stream.ReadByte();
         }
 
-        public void Open(string hostname) {
+        public void Open(string hostname, int timeout)
+        {
+            m_Hostname = hostname;
+
+            // Check if connection is already open and close it
             if (IsOpen)
                 Close();
-            m_Hostname = hostname;
-            m_Client = new TcpClient(hostname, 5555);
-            m_Stream = m_Client.GetStream();
-            m_Stream.ReadTimeout = ReadTimeout;
-            m_IsOpen = true;
-            if (Opened != null)
-                Opened();
+
+            m_Client = new TcpClient();
+
+            // Try to connect async and wait for timeout
+            if (m_Client.ConnectAsync(hostname, 5555).Wait(1000))
+            {
+                m_Stream = m_Client.GetStream(); // Get stream to write to telnet
+                m_Stream.ReadTimeout = ReadTimeout;
+                m_IsOpen = true; // Update connected flag
+
+                // If callback exists, call it
+                if (Opened != null)
+                    Opened();
+            }
+            else
+            {
+                // Connection failed. Clean up
+                m_Client.Close();
+                m_IsOpen = false;
+
+                // Throw exception
+                throw new TimeoutException("Connection failed");
+            }
         }
 
         public void Close() {
@@ -84,6 +99,8 @@ namespace SCPI.Telnet {
             m_Stream.Close();
             m_Client.Close();
             m_IsOpen = false;
+
+            // If callback exists, call it
             if (Closed != null)
                 Closed();
         }

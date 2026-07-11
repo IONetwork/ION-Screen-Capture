@@ -1,0 +1,104 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|c:\\users\\admin\\desktop\\projects\\fire-scpi\\scpi screen capture\\telnet\\telnet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|solutionrelative:telnet\\telnet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|c:\\users\\admin\\desktop\\projects\\fire-scpi\\scpi screen capture\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|c:\\users\\admin\\desktop\\projects\\fire-scpi\\scpi screen capture\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|c:\\users\\admin\\desktop\\projects\\fire-scpi\\scpi screen capture\\ip_field.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|solutionrelative:ip_field.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|c:\\users\\admin\\desktop\\projects\\fire-scpi\\scpi screen capture\\globalhotkey.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{98248298-AF3E-41D9-82E4-2E325502FF04}|SCPI.csproj|solutionrelative:globalhotkey.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Telnet.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\Telnet\\Telnet.cs",
+              "RelativeDocumentMoniker": "Telnet\\Telnet.cs",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\Telnet\\Telnet.cs",
+              "RelativeToolTip": "Telnet\\Telnet.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAiwFMAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-09T20:21:21.873Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GlobalHotKey.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\GlobalHotKey.cs",
+              "RelativeDocumentMoniker": "GlobalHotKey.cs",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\GlobalHotKey.cs",
+              "RelativeToolTip": "GlobalHotKey.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAUwCEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-09T19:44:30.857Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Form1.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\Form1.cs",
+              "RelativeDocumentMoniker": "Form1.cs",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\Form1.cs",
+              "RelativeToolTip": "Form1.cs",
+              "ViewState": "AgIAACYAAAAAAAAAAAAjwEcAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-09T19:30:11.438Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Form1.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\Form1.cs",
+              "RelativeDocumentMoniker": "Form1.cs",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\Form1.cs [Design]",
+              "RelativeToolTip": "Form1.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-09T18:35:51.808Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IP_Field.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\IP_Field.cs",
+              "RelativeDocumentMoniker": "IP_Field.cs",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\Projects\\Fire-SCPI\\SCPI Screen Capture\\IP_Field.cs",
+              "RelativeToolTip": "IP_Field.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAIwB4AAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-09T17:55:29.537Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

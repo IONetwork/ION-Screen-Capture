@@ -1,0 +1,11 @@
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\bin\Debug\SCPI.exe.config
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\bin\Debug\SCPI.exe
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\bin\Debug\SCPI.pdb
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.Form1.resources
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.Properties.Resources.resources
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.csproj.GenerateResource.cache
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.exe
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.pdb
+C:\Users\Admin\Desktop\Projects\Fire-SCPI\SCPI Screen Capture\obj\Debug\SCPI.IP_Field.resources
