@@ -1,6 +1,6 @@
 [package]
 name = "ion-screen-capture"
-version = "0.2.0"
+version = "0.3.0"
 description = "ION Screen Capture - screen capture from SCPI/LXI instruments over the network"
 authors = ["ION"]
 edition = "2024"

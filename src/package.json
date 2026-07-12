@@ -1,7 +1,7 @@
 {
   "name": "ion-screen-capture",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "ION Screen Capture - capture screens from SCPI/LXI instruments over the network (Tauri + Svelte)",
   "scripts": {
