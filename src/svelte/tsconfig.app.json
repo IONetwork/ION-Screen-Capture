@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "tsBuildInfoFile": "../../node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2023",
     "module": "esnext",
     "types": ["svelte", "vite/client"],
@@ -11,9 +11,10 @@
     "checkJs": true,
     "moduleDetection": "force",
     "paths": {
-      "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"]
+      "$lib": ["./lib"],
+      "$lib/*": ["./lib/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+  "include": ["**/*.ts", "**/*.js", "**/*.svelte"],
+  "exclude": ["vite.config.ts", "svelte.config.js"]
 }

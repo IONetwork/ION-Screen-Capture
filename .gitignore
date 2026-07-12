@@ -6,8 +6,8 @@ dist-ssr/
 .vite/
 
 # --- Rust / Tauri backend ---
-src-tauri/target/
-src-tauri/gen/
+src/src-tauri/target/
+src/src-tauri/gen/
 
 # --- Editor / OS ---
 .DS_Store
