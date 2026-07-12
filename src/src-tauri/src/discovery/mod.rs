@@ -79,14 +79,13 @@ pub enum DiscoveryMsg {
 
 pub struct DiscoveryHandle {
     pub cancel: CancellationToken,
-    pub join: tokio::task::JoinHandle<()>,
 }
 
 /// Spawn the discovery orchestrator; results stream to the frontend via events.
 pub fn spawn_discovery(app: tauri::AppHandle, opts: DiscoveryOptions) -> DiscoveryHandle {
     let cancel = CancellationToken::new();
-    let join = tokio::spawn(run_discovery(app, opts, cancel.clone()));
-    DiscoveryHandle { cancel, join }
+    tokio::spawn(run_discovery(app, opts, cancel.clone()));
+    DiscoveryHandle { cancel }
 }
 
 /// Dedup preference: a reachable raw-socket port (+2) and a parsed `*IDN?` (+1)

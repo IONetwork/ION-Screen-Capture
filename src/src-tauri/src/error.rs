@@ -25,12 +25,8 @@ pub enum AppError {
     UnknownInstrument(String),
     #[error("{vendor} does not support {what}")]
     Unsupported { vendor: String, what: String },
-    #[error("discovery is already running")]
-    DiscoveryAlreadyRunning,
     #[error("no usable network interface found")]
     NoInterface,
-    #[error("operation cancelled")]
-    Cancelled,
     #[error("mDNS error: {0}")]
     Mdns(#[from] mdns_sd::Error),
     #[error("I/O error: {0}")]
@@ -52,9 +48,7 @@ impl AppError {
             AppError::Protocol(_) => "Protocol",
             AppError::UnknownInstrument(_) => "UnknownInstrument",
             AppError::Unsupported { .. } => "Unsupported",
-            AppError::DiscoveryAlreadyRunning => "DiscoveryAlreadyRunning",
             AppError::NoInterface => "NoInterface",
-            AppError::Cancelled => "Cancelled",
             AppError::Mdns(_) => "Mdns",
             AppError::Io(_) => "Io",
             AppError::Fs(_) => "Fs",

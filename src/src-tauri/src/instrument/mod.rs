@@ -96,15 +96,6 @@ pub fn make_screen(vendor: Vendor, class: Class, model: &str) -> AppResult<Box<d
     }
 }
 
-/// Default raw-socket TCP port for a vendor (Rigol 5555, Tektronix 4000, else 5025).
-pub fn default_port(vendor: Vendor) -> u16 {
-    match vendor {
-        Vendor::Rigol => 5555,
-        Vendor::Tektronix => 4000,
-        _ => 5025,
-    }
-}
-
 // --- shared image helpers for bare-stream drivers ---
 
 /// Max bytes to accept for a bare-stream screenshot (headroom over ~2.5 MB).

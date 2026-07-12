@@ -19,8 +19,6 @@ use crate::error::{AppError, AppResult};
 pub trait ScpiIo: Send {
     /// Write an ASCII command, append CRLF, and flush.
     async fn write_line(&mut self, cmd: &str) -> AppResult<()>;
-    /// Write raw bytes (already including any terminator) and flush.
-    async fn write_raw(&mut self, bytes: &[u8]) -> AppResult<()>;
     /// Read one line, trimming a trailing CR/LF. Used by `*IDN?` etc.
     async fn read_line(&mut self) -> AppResult<String>;
     /// Read one IEEE 488.2 definite-length block (framed screenshots).
@@ -48,7 +46,6 @@ pub trait ScpiIo: Send {
 pub struct Transport {
     reader: BufReader<OwnedReadHalf>,
     writer: OwnedWriteHalf,
-    peer: SocketAddr,
     io_timeout: Duration,
 }
 
@@ -71,18 +68,12 @@ impl Transport {
     /// Wrap an already-connected stream (used by the discovery probe).
     pub fn from_stream(stream: TcpStream, io_timeout: Duration) -> AppResult<Self> {
         let _ = stream.set_nodelay(true);
-        let peer = stream.peer_addr()?;
         let (r, w) = stream.into_split();
         Ok(Self {
             reader: BufReader::with_capacity(64 * 1024, r),
             writer: w,
-            peer,
             io_timeout,
         })
-    }
-
-    pub fn peer(&self) -> SocketAddr {
-        self.peer
     }
 }
 
@@ -95,21 +86,6 @@ impl ScpiIo for Transport {
         let fut = async move {
             w.write_all(cmd.as_bytes()).await?;
             w.write_all(b"\r\n").await?;
-            w.flush().await?;
-            Ok::<(), std::io::Error>(())
-        };
-        tokio::time::timeout(dur, fut)
-            .await
-            .map_err(|_| AppError::Timeout(ms))??;
-        Ok(())
-    }
-
-    async fn write_raw(&mut self, bytes: &[u8]) -> AppResult<()> {
-        let ms = self.io_timeout.as_millis() as u64;
-        let dur = self.io_timeout;
-        let w = &mut self.writer;
-        let fut = async move {
-            w.write_all(bytes).await?;
             w.flush().await?;
             Ok::<(), std::io::Error>(())
         };
