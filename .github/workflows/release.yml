@@ -38,7 +38,7 @@ jobs:
           "tag=$tag"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag --draft --title "ION Screen Capture $tag" --notes "Automated build."
+            gh release create $tag --draft --title "$tag" --notes "Automated build."
           }
 
   build:
