@@ -97,6 +97,30 @@ jobs:
       - name: Build app + bundles
         run: npm run tauri build
 
+      # Tauri over-bundles the wayland client libs into the AppImage. The old
+      # bundled libwayland-client lacks wl_fixes_interface, so on modern distros
+      # (e.g. Mesa 26) the host libEGL aborts at startup with EGL_BAD_PARAMETER
+      # and the window never paints. These libs must load from the host graphics
+      # stack, so strip them from the AppDir and repackage (official excludelist).
+      - name: Unbundle host wayland libs from the AppImage
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd src-tauri/target/release/bundle/appimage
+          img=$(ls *.AppImage | head -n1)
+          echo "Repacking: $img"
+          ./"$img" --appimage-extract >/dev/null
+          rm -f "$img"
+          rm -f squashfs-root/usr/lib/libwayland-client.so.0 \
+                squashfs-root/usr/lib/libwayland-server.so.0 \
+                squashfs-root/usr/lib/libwayland-egl.so.1 \
+                squashfs-root/usr/lib/libwayland-cursor.so.0
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 ./appimagetool --no-appstream squashfs-root "$img"
+          rm -rf squashfs-root appimagetool
+
       # Upload THIS OS's artifacts to the draft created by create-release.
       - name: Upload assets to draft release
         env:
