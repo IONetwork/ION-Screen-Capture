@@ -20,7 +20,7 @@ pub async fn run(
     let total = targets.len();
     let connect_to = Duration::from_millis(opts.connect_timeout_ms);
     // Only OPEN ports reach the `*IDN?` read, so a generous read timeout is
-    // cheap — and necessary: some scopes (Rigol DS1000Z) answer slower than a
+    // cheap - and necessary: some scopes (Rigol DS1000Z) answer slower than a
     // tight timeout, which was making the sweep intermittently miss them.
     let read_to = Duration::from_millis(1500);
 

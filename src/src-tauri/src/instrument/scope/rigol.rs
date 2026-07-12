@@ -40,6 +40,9 @@ impl ScreenCapture for Rigol {
     fn supports_invert(&self) -> bool {
         true
     }
+    async fn go_local(&self, io: &mut dyn ScpiIo) -> AppResult<()> {
+        io.write_line(":SYSTem:LOCKed OFF").await
+    }
 
     async fn capture(&self, io: &mut dyn ScpiIo, opts: &CaptureOptions) -> AppResult<RawCapture> {
         let cmd = format!(

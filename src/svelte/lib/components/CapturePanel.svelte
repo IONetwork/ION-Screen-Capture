@@ -13,7 +13,7 @@
 
   // Format/color/invert live in settings (persisted) so the global hotkey uses
   // the same choices as this panel. Correct the format to one this instrument
-  // supports — but only if the current choice isn't valid, so a supported
+  // supports - but only if the current choice isn't valid, so a supported
   // preference (e.g. BMP) survives a reconnect.
   $effect(() => {
     const list = info?.supportedFormats;
@@ -23,7 +23,9 @@
     }
   });
 
-  const formatOptions = $derived((info?.supportedFormats ?? []).map((f) => ({ value: f, label: f })));
+  const formatOptions = $derived(
+    (info?.supportedFormats ?? []).map((f) => ({ value: f, label: f })),
+  );
 
   function shortModel(): string {
     if (!info) return "";
@@ -36,7 +38,8 @@
       color: settings.color,
       invert: settings.invert,
       copyToClipboard: settings.copyToClipboard,
-      saveDir: settings.saveToDisk && settings.saveDir ? settings.saveDir : null,
+      saveDir:
+        settings.saveToDisk && settings.saveDir ? settings.saveDir : null,
     });
   }
 </script>
@@ -47,12 +50,11 @@
       <div class="id">
         <div class="model">{shortModel()}</div>
         <div class="sub mono">
-          {info.addr}<span class="dim"> · {info.class} · fw {info.idn.firmware}</span>
+          {info.addr}<span class="dim">
+            · {info.class} · fw {info.idn.firmware}</span
+          >
         </div>
       </div>
-      <Button variant="ghost" size="sm" onclick={() => connection.disconnect()}>
-        <Icon name="disconnect" size={13} /> Disconnect
-      </Button>
     </header>
 
     <div class="toolbar">
@@ -68,16 +70,26 @@
       {/if}
       {#if info.supportsColor}
         <label class="toggle">
-          <Switch checked={settings.color} onCheckedChange={(v) => settings.setColor(v)} /><span>Color</span>
+          <Switch
+            checked={settings.color}
+            onCheckedChange={(v) => settings.setColor(v)}
+          /><span>Color</span>
         </label>
       {/if}
       {#if info.supportsInvert}
         <label class="toggle">
-          <Switch checked={settings.invert} onCheckedChange={(v) => settings.setInvert(v)} /><span>Invert</span>
+          <Switch
+            checked={settings.invert}
+            onCheckedChange={(v) => settings.setInvert(v)}
+          /><span>Invert</span>
         </label>
       {/if}
       <div class="spacer"></div>
-      <Button variant="primary" disabled={connection.capturing} onclick={capture}>
+      <Button
+        variant="primary"
+        disabled={connection.capturing}
+        onclick={capture}
+      >
         <Icon name="capture" size={14} />
         {connection.capturing ? "Capturing…" : "Capture"}
       </Button>
@@ -85,16 +97,32 @@
 
     {#if connection.error}<p class="err">{connection.error}</p>{/if}
 
-    <Preview
-      src={cap?.dataUrl}
-      onCopy={() => connection.copyImage()}
-      onSave={() => connection.saveImageAs()}
-    />
+    {#if cap}
+      <Preview
+        src={cap.dataUrl}
+        onCopy={() => connection.copyImage()}
+        onSave={() => connection.saveImageAs()}
+      />
+    {:else}
+      <!-- Connected, nothing captured yet: name the instrument and prompt the action. -->
+      <div class="idle">
+        <div class="idle-body">
+          <div class="idle-glyph"><Icon name="capture" size={24} /></div>
+          <div class="idle-title">Ready to capture</div>
+          <div class="idle-model mono">{shortModel()}</div>
+          <p class="idle-hint">
+            Press <b>Capture</b> to grab the screen.{#if settings.hotkeyEnabled}<br
+              />Your global shortcut works too.{/if}
+          </p>
+        </div>
+      </div>
+    {/if}
 
     <div class="meta mono">
       {#if cap}
         {cap.format} · {(cap.bytesLen / 1024).toFixed(0)} KB
-        {#if cap.width && cap.height} · {cap.width}×{cap.height}{/if}
+        {#if cap.width && cap.height}
+          · {cap.width}×{cap.height}{/if}
         {#if cap.savedPath}<span class="saved"> · saved</span>{/if}
         {#if connection.flash}
           <span class="flash"> · {connection.flash}</span>
@@ -108,9 +136,14 @@
   </section>
 {:else}
   <section class="panel disconnected">
-    <div class="hint">
-      <div class="hint-screen"><Preview /></div>
-      <p>Connect an instrument from the left to capture its screen.</p>
+    <div class="idle">
+      <div class="idle-body">
+        <div class="idle-glyph muted"><Icon name="scan" size={24} /></div>
+        <div class="idle-title">No instrument connected</div>
+        <p class="idle-hint">
+          Choose one from the list on the left.<br />Not listed? Scan the network or enter its IP.
+        </p>
+      </div>
     </div>
   </section>
 {/if}
@@ -123,6 +156,55 @@
     padding: 1rem 1.1rem;
     gap: 0.85rem;
     overflow-y: auto;
+  }
+  /* Idle state: same flex-sized screen box as a capture, background matching the
+     capture area, with a centered prompt naming the connected instrument. */
+  .idle {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    background: var(--inset);
+  }
+  .idle-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  .idle-glyph {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-weak);
+    color: var(--accent);
+    margin-bottom: 0.15rem;
+  }
+  .idle-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .idle-model {
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .idle-hint {
+    margin: 0.4rem 0 0;
+    max-width: 34ch;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .idle-hint b {
+    color: var(--ink);
+    font-weight: 600;
   }
   .fp {
     display: flex;
@@ -185,21 +267,10 @@
   .rc-hint {
     color: var(--ink-3);
   }
-  .disconnected {
-    align-items: center;
-    justify-content: center;
-  }
-  .hint {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    max-width: 360px;
-    text-align: center;
-    color: var(--ink-3);
-  }
-  .hint-screen {
-    width: 240px;
-    opacity: 0.6;
+  /* Muted glyph for the disconnected state (vs the accent "ready" glyph). */
+  .idle-glyph.muted {
+    background: var(--surface);
+    color: var(--ink-2);
+    border: 1px solid var(--line);
   }
 </style>

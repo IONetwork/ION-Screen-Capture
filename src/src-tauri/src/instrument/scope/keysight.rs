@@ -33,6 +33,9 @@ impl ScreenCapture for Keysight {
     fn supports_invert(&self) -> bool {
         true
     }
+    async fn go_local(&self, io: &mut dyn ScpiIo) -> AppResult<()> {
+        io.write_line(":SYSTem:LOCK OFF").await
+    }
 
     async fn capture(&self, io: &mut dyn ScpiIo, opts: &CaptureOptions) -> AppResult<RawCapture> {
         // INKSaver ON = inverted (white-bg); OFF = normal. Map `invert` onto it.

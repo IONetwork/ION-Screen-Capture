@@ -1,9 +1,9 @@
 [package]
 name = "ion-screen-capture"
-version = "0.1.0"
-description = "ION Screen Capture — screen capture from SCPI/LXI instruments over the network"
+version = "0.3.1"
+description = "ION Screen Capture - screen capture from SCPI/LXI instruments over the network"
 authors = ["ION"]
-edition = "2021"
+edition = "2024"
 
 # The library the desktop binary and mobile entrypoints call into.
 [lib]
@@ -19,6 +19,7 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-store = "2"
+tauri-plugin-opener = "2"
 
 # async runtime + concurrency
 tokio = { version = "1", features = ["net", "io-util", "sync", "time", "macros", "rt-multi-thread"] }

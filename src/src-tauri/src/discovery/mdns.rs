@@ -35,13 +35,27 @@ pub async fn run(tx: Sender<DiscoveryMsg>, cancel: CancellationToken) -> AppResu
                 Some(ServiceEvent::ServiceResolved(info)) => {
                     // mdns-sd 0.20: ResolvedService with public fields; addresses
                     // are ScopedIp (IPv4/IPv6 + interface scope).
-                    let port = info.port;
-                    let hostname = info.host.clone();
                     let service_type = info.ty_domain.clone();
+                    // Only `_scpi-raw` advertises the raw-socket capture port; the
+                    // other LXI service types advertise the web / VXI-11 port, so
+                    // fall back to the IANA scpi-raw port (5025) to stay connectable.
+                    let port = if service_type.starts_with("_scpi-raw") {
+                        info.port
+                    } else {
+                        5025
+                    };
+                    let hostname = info.host.clone();
                     for scoped in info.addresses.iter() {
+                        let ip = scoped.to_ip_addr();
+                        // The capture path is IPv4 raw sockets. Skip IPv6 - an IPv6
+                        // entry can't be connected here and won't dedup against the
+                        // sweep's IPv4, so it shows up as a second, dead entry.
+                        if !ip.is_ipv4() {
+                            continue;
+                        }
                         let _ = tx
                             .send(DiscoveryMsg::Device(DiscoveredDevice {
-                                ip: scoped.to_ip_addr(),
+                                ip,
                                 port,
                                 source: DiscoverySource::Mdns,
                                 vendor: Vendor::Unknown,

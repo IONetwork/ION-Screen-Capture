@@ -1,5 +1,5 @@
 <!--
-  Device discovery + connect. Interim plain markup — the bits-ui redesign and
+  Device discovery + connect. Interim plain markup - the bits-ui redesign and
   $lib/ui primitives land in M5. Functional focus: exercise the discovery
   pipeline (scan → live list → connect) and manual host:port fallback.
 -->
@@ -50,7 +50,7 @@
         <button
           class="device"
           disabled={raw || connection.busy}
-          title={raw ? "VXI-11 only — raw-socket connect not supported yet" : `Connect to ${d.ip}:${d.port}`}
+          title={raw ? "VXI-11 only - raw-socket connect not supported yet" : `Connect to ${d.ip}:${d.port}`}
           onclick={() => connection.connect(d.ip, d.port)}
         >
           <span class="name">{primary(d)}</span>

@@ -79,6 +79,18 @@ pub trait ScreenCapture: Send + Sync {
     async fn on_connect(&self, _io: &mut dyn ScpiIo) -> AppResult<()> {
         Ok(())
     }
+    /// Return the instrument to LOCAL (front panel usable) over the raw socket.
+    /// Default no-op; drivers with a real command override. Best-effort - the
+    /// caller ignores the result so it never fails a capture/disconnect.
+    async fn go_local(&self, _io: &mut dyn ScpiIo) -> AppResult<()> {
+        Ok(())
+    }
+    /// True if the instrument only returns to LOCAL via the VXI-11 `device_local`
+    /// RPC (no raw-socket command exists - Keysight/Rigol-DM858 Truevolt DMMs).
+    /// The command layer then also fires `discovery::vxi11::device_local`.
+    fn wants_vxi11_local(&self) -> bool {
+        false
+    }
     async fn capture(&self, io: &mut dyn ScpiIo, opts: &CaptureOptions) -> AppResult<RawCapture>;
 }
 
@@ -101,7 +113,7 @@ pub fn make_screen(vendor: Vendor, class: Class, model: &str) -> AppResult<Box<d
 /// Max bytes to accept for a bare-stream screenshot (headroom over ~2.5 MB).
 pub(crate) const MAX_IMAGE_BYTES: usize = 16 * 1024 * 1024;
 
-/// Truncate a Windows BMP to the size in its header (offset 2, u32 LE) — strips
+/// Truncate a Windows BMP to the size in its header (offset 2, u32 LE) - strips
 /// the 1–13 junk trailing bytes some Siglent firmware appends after `SCDP`.
 pub(crate) fn truncate_bmp(bytes: Vec<u8>) -> Vec<u8> {
     if bytes.len() >= 6 && &bytes[0..2] == b"BM" {
@@ -113,7 +125,7 @@ pub(crate) fn truncate_bmp(bytes: Vec<u8>) -> Vec<u8> {
     bytes
 }
 
-/// Truncate at the PNG `IEND` chunk end — strips any trailing bytes after a PNG
+/// Truncate at the PNG `IEND` chunk end - strips any trailing bytes after a PNG
 /// streamed with no length header (Tektronix `FILESystem:READFile`).
 pub(crate) fn truncate_at_png_iend(bytes: Vec<u8>) -> Vec<u8> {
     const IEND: [u8; 8] = [0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82];

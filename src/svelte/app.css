@@ -1,5 +1,5 @@
 /* ============================================================================
-   ION Screen Capture design system — "bench instrument" identity.
+   ION Screen Capture design system - "bench instrument" identity.
    Near-monochrome cool neutrals, one restrained signal-amber accent, monospace
    for technical values, hairline rules. Light-default; warm-graphite dark.
    ========================================================================== */
@@ -13,7 +13,7 @@
   --r: 5px;
   --r-sm: 3px;
 
-  /* light (default) — bench off-white panels on a cool gray deck */
+  /* light (default) - bench off-white panels on a cool gray deck */
   --bg: #e8eaed;
   --surface: #ffffff;
   --inset: #f1f3f5;
@@ -22,7 +22,7 @@
   --ink-3: #878e97;
   --line: #dcdfe4;
   --line-2: #c8cdd3;
-  --accent: #b56a1b;          /* signal amber — live/active/focus only */
+  --accent: #b56a1b;          /* signal amber - live/active/focus only */
   --accent-weak: #f4ead9;
   --danger: #b42318;
   --ok: #3f7d4e;
@@ -90,6 +90,21 @@ body {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Desktop chrome: don't let the UI rubber-band-select like a web page. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Re-enable selection only where copying is genuinely useful: monospace
+   technical values (IP, firmware, sizes, paths), form fields, and anything
+   explicitly opted in via .selectable. */
+.mono,
+input,
+textarea,
+.field,
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 #app {

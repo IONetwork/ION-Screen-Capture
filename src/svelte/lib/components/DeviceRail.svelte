@@ -21,7 +21,11 @@
   function connectManual() {
     const addr = ip.trim();
     if (!addr) return;
-    void connection.connect(addr, port.trim() ? Number(port) : undefined);
+    // `port` is bound to a number <input>, so at runtime it's a number|null
+    // (not the declared string) - parse defensively instead of calling .trim().
+    const p = Number(port);
+    const validPort = Number.isFinite(p) && p >= 1 && p <= 65535 ? p : undefined;
+    void connection.connect(addr, validPort);
   }
 </script>
 
@@ -51,24 +55,41 @@
   <div class="list">
     {#each discovery.devices as d (d.ip)}
       {@const raw = d.port === 0}
-      <!-- bespoke list-row control; form primitives live in $lib/ui -->
-      <button
-        class="dev"
-        class:active={active(d)}
-        type="button"
-        disabled={raw || connection.busy}
-        title={raw ? "VXI-11 only — not capturable over a raw socket" : `Connect to ${d.ip}:${d.port}`}
-        onclick={() => connection.connect(d.ip, d.port)}
-      >
-        <span class="dev-name">{primary(d)}</span>
-        <span class="dev-addr mono">{d.ip}{d.port ? `:${d.port}` : ""}</span>
-        <span class="dev-tags">
-          <span class="tag">{d.source}</span>
-          {#if d.class !== "other"}
-            <span class="tag">{d.class === "oscilloscope" ? "scope" : d.class}</span>
-          {/if}
-        </span>
-      </button>
+      <!-- bespoke list row: the connect action fills the card, and a disconnect
+           control appears on the connected one -->
+      <div class="dev" class:active={active(d)} class:raw>
+        <button
+          class="dev-connect"
+          type="button"
+          disabled={raw || connection.busy || active(d)}
+          title={raw
+            ? "VXI-11 only (no raw-socket capture)"
+            : active(d)
+              ? "Connected"
+              : `Connect to ${d.ip}:${d.port}`}
+          onclick={() => connection.connect(d.ip, d.port)}
+        >
+          <span class="dev-name">{primary(d)}</span>
+          <span class="dev-addr mono">{d.ip}{d.port ? `:${d.port}` : ""}</span>
+          <span class="dev-tags">
+            <span class="tag">{d.source}</span>
+            {#if d.class !== "other"}
+              <span class="tag">{d.class === "oscilloscope" ? "scope" : d.class}</span>
+            {/if}
+          </span>
+        </button>
+        {#if active(d)}
+          <button
+            class="dev-x"
+            type="button"
+            title="Disconnect"
+            disabled={connection.busy}
+            onclick={() => connection.disconnect()}
+          >
+            <Icon name="disconnect" size={14} />
+          </button>
+        {/if}
+      </div>
     {:else}
       <p class="empty">
         {discovery.scanning
@@ -89,6 +110,7 @@
     <Button size="sm" disabled={connection.busy || !ip.trim()} onclick={connectManual}>
       Connect
     </Button>
+    {#if connection.error && !connection.info}<p class="err">{connection.error}</p>{/if}
   </div>
 </div>
 
@@ -123,10 +145,38 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    margin: 0 -0.2rem;
-    padding: 0 0.2rem;
+    /* Scroll container clips to its padding box; give the card focus/active
+       ring (outline + 1px offset) clear room on both sides so its left edge
+       isn't clipped. Negative margin keeps cards aligned with the rail. */
+    margin: 0 -0.4rem;
+    padding: 3px 0.4rem;
   }
   .dev {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--line);
+    /* 2px left border reserves space for the active accent bar; keep it a
+       visible hairline when inactive so the card's left edge isn't "missing". */
+    border-left: 2px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .dev.raw {
+    opacity: 0.5;
+  }
+  .dev:hover:not(.raw) {
+    border-color: var(--line-2);
+  }
+  .dev.active {
+    border-left-color: var(--accent);
+    background: var(--accent-weak);
+  }
+  /* Connect action fills the card; the info stack lives inside it. */
+  .dev-connect {
+    flex: 1;
+    min-width: 0;
     appearance: none;
     text-align: left;
     font: inherit;
@@ -135,23 +185,37 @@
     align-items: flex-start;
     gap: 4px;
     padding: 0.5rem 0.6rem;
-    border: 1px solid var(--line);
-    border-left: 2px solid transparent;
-    border-radius: var(--r-sm);
-    background: var(--surface);
-    color: var(--ink);
+    border: 0;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
   }
-  .dev:hover:not(:disabled) {
-    border-color: var(--line-2);
+  .dev-connect:disabled {
+    cursor: default;
   }
-  .dev:disabled {
-    opacity: 0.5;
+  .dev.raw .dev-connect {
     cursor: not-allowed;
   }
-  .dev.active {
-    border-left-color: var(--accent);
-    background: var(--accent-weak);
+  /* Disconnect control, shown only on the connected card. */
+  .dev-x {
+    flex: none;
+    appearance: none;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    padding: 0 0.55rem;
+    border: 0;
+    border-left: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .dev-x:hover:not(:disabled) {
+    color: var(--danger);
+  }
+  .dev-x:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
   .dev-name {
     font-weight: 550;

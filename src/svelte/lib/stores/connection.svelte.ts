@@ -77,7 +77,9 @@ class ConnectionStore {
     this.busy = true;
     this.error = null;
     try {
-      this.info = await ipcConnect(ip, port);
+      const info = await ipcConnect(ip, port);
+      this.lastCapture = null; // switched instruments → drop the old preview
+      this.info = info;
     } catch (e) {
       this.error = errMsg(e);
     } finally {
