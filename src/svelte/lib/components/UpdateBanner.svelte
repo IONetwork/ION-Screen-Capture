@@ -13,7 +13,7 @@
 <div class="update-banner" role="status">
   <span class="dot" aria-hidden="true"></span>
   <span class="msg">
-    A new version{#if version} <span class="mono">{version}</span>{/if} is available.
+    A new version{#if version}{" "}<span class="mono">{version}</span>{/if} is available.
   </span>
   <span class="spacer"></span>
   <Button variant="primary" size="sm" onclick={() => onUpdate?.()}>Update</Button>
