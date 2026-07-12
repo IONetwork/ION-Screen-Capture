@@ -1,0 +1,22 @@
+# --- Node / Vite frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# --- Rust / Tauri backend ---
+src/src-tauri/target/
+src/src-tauri/gen/
+
+# --- Editor / OS ---
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# --- Env ---
+.env
+.env.*
+!.env.example
