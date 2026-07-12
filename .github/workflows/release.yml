@@ -1,0 +1,61 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # Builds the frontend + Tauri app, then creates a DRAFT GitHub Release and
+      # uploads the NSIS setup.exe and MSI. tagName templating unifies both
+      # triggers: a pushed tag vX.Y.Z matches the app version; a manual run
+      # creates/updates that same tag.
+      - name: Build app + draft release (NSIS + MSI)
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "ION Screen Capture v__VERSION__"
+          releaseDraft: true
+          prerelease: false
+
+      # The lean portable build is just the release binary (frontend embedded,
+      # windowless). Rename it and attach it to the same draft release.
+      - name: Attach lean portable exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.tauri.outputs.appVersion }}"
+          $dst = "ION-Screen-Capture_${ver}_x64-portable.exe"
+          Copy-Item "src-tauri/target/release/ion-screen-capture.exe" $dst
+          gh release upload "v$ver" $dst --clobber

@@ -1,0 +1,43 @@
+[package]
+name = "ion-screen-capture"
+version = "0.1.0"
+description = "ION Screen Capture — screen capture from SCPI/LXI instruments over the network"
+authors = ["ION"]
+edition = "2021"
+
+# The library the desktop binary and mobile entrypoints call into.
+[lib]
+name = "ion_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-store = "2"
+
+# async runtime + concurrency
+tokio = { version = "1", features = ["net", "io-util", "sync", "time", "macros", "rt-multi-thread"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+futures = "0.3"
+async-trait = "0.1"
+
+# discovery
+mdns-sd = "0.20"
+if-addrs = "0.15"
+
+# serde + errors + misc
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["clock"] }
+image = { version = "0.25", default-features = false, features = ["png", "bmp", "jpeg", "tiff"] }
+
+# Global shortcut is desktop-only.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"
