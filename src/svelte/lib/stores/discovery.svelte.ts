@@ -1,6 +1,7 @@
 // Discovery state (runes). Subscribes to `discovery:*` events while a scan runs.
 
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import { isTauri } from "@tauri-apps/api/core";
 import {
   cancelDiscovery,
   onDiscoveryComplete,
@@ -21,6 +22,14 @@ class DiscoveryStore {
   lastError = $state<string | null>(null);
 
   #unlisten: UnlistenFn[] = [];
+  #started = false;
+
+  async init() {
+    if (this.#started) return;
+    this.#started = true;
+    if (!isTauri()) return; // skip plain browser / ?mock (don't wipe seeded devices)
+    await this.start(); // start() self-guards via `scanning`
+  }
 
   async start() {
     if (this.scanning) return;

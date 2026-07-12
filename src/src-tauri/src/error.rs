@@ -11,8 +11,6 @@ pub enum AppError {
     NotConnected,
     #[error("no capture available yet")]
     NoCapture,
-    #[error("already connected to {0}")]
-    AlreadyConnected(String),
     #[error("connect to {addr} timed out after {timeout_ms} ms")]
     ConnectTimeout { addr: String, timeout_ms: u64 },
     #[error("operation timed out after {0} ms")]
@@ -41,7 +39,6 @@ impl AppError {
         match self {
             AppError::NotConnected => "NotConnected",
             AppError::NoCapture => "NoCapture",
-            AppError::AlreadyConnected(_) => "AlreadyConnected",
             AppError::ConnectTimeout { .. } => "ConnectTimeout",
             AppError::Timeout(_) => "Timeout",
             AppError::BadBlock(_) => "BadBlock",

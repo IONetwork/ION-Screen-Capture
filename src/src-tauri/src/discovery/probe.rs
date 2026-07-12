@@ -15,7 +15,7 @@ pub struct Probed {
 }
 
 /// Open a short-lived socket, send `*IDN?`, and validate the response.
-/// Returns `None` on any failure (closed port, timeout, non-SCPI reply) — the
+/// Returns `None` on any failure (closed port, timeout, non-SCPI reply) - the
 /// socket is dropped immediately so we never hold a session open.
 pub async fn probe(
     addr: SocketAddr,

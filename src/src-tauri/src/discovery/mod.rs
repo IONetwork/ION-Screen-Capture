@@ -164,7 +164,11 @@ async fn run_discovery(app: tauri::AppHandle, opts: DiscoveryOptions, cancel: Ca
     }
     drop(tx); // last sender: rx closes once all producers finish
 
-    let deadline = tokio::time::sleep(Duration::from_millis(opts.overall_timeout_ms));
+    // Hard cap on the whole scan; shortened once the sweep finishes (below) so
+    // the progress bar lines up with the scan actually completing.
+    let start = tokio::time::Instant::now();
+    let hard_deadline = start + Duration::from_millis(opts.overall_timeout_ms);
+    let deadline = tokio::time::sleep_until(hard_deadline);
     tokio::pin!(deadline);
 
     let mut best: HashMap<IpAddr, u8> = HashMap::new();
@@ -173,7 +177,7 @@ async fn run_discovery(app: tauri::AppHandle, opts: DiscoveryOptions, cancel: Ca
     let _ = app.emit(events::DISCOVERY_STARTED, ());
 
     // Seed the currently-connected instrument: its single raw-socket session is
-    // held by us, so the sweep can't re-probe it — without this it would appear
+    // held by us, so the sweep can't re-probe it - without this it would appear
     // as a non-capturable VXI-11 stub on a re-scan.
     if let Some(dev) = connected_device(&app).await {
         best.insert(dev.ip, device_rank(&dev));
@@ -212,6 +216,14 @@ async fn run_discovery(app: tauri::AppHandle, opts: DiscoveryOptions, cancel: Ca
                     let _ = app.emit(events::DISCOVERY_PROGRESS, events::Progress { scanned, total });
                 }
                 Some(DiscoveryMsg::SourceDone(source)) => {
+                    // The sweep is the deterministic, progress-tracked producer.
+                    // Once it's done, give mDNS/VXI-11 only a short grace for
+                    // stragglers, then finish - so the full progress bar coincides
+                    // with the scan ending instead of idling to the hard timeout.
+                    if source == DiscoverySource::Sweep {
+                        let soft = tokio::time::Instant::now() + Duration::from_millis(1200);
+                        deadline.as_mut().reset(soft.min(hard_deadline));
+                    }
                     let _ = app.emit(events::DISCOVERY_SOURCE_DONE, events::SourceDoneEvt { source });
                 }
                 Some(DiscoveryMsg::SourceError { source, message }) => {

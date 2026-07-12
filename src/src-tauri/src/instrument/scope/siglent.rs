@@ -19,6 +19,9 @@ impl ScreenCapture for Siglent {
     fn supported_formats(&self) -> &'static [ImageFormat] {
         FORMATS
     }
+    async fn go_local(&self, io: &mut dyn ScpiIo) -> AppResult<()> {
+        io.write_line(":SYSTem:REMote OFF").await
+    }
 
     async fn capture(&self, io: &mut dyn ScpiIo, _opts: &CaptureOptions) -> AppResult<RawCapture> {
         io.write_line("SCDP").await?;

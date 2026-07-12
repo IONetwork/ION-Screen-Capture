@@ -66,11 +66,11 @@
       <polyline points="16,150 384,150" class="trace" />
     </svg>
     <span class="await micro-label">awaiting capture</span>
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
   {/if}
-  <span class="corner tl"></span>
-  <span class="corner tr"></span>
-  <span class="corner bl"></span>
-  <span class="corner br"></span>
 </div>
 
 {#if menu}
@@ -95,20 +95,34 @@
 <style>
   .screen {
     position: relative;
-    aspect-ratio: 4 / 3;
     width: 100%;
-    background: #0d1012;
     border: 1px solid var(--line-2);
     border-radius: var(--r-sm);
     overflow: hidden;
     display: grid;
     place-items: center;
   }
+  /* Empty placeholder keeps the oscilloscope-graticule signature look. */
+  .screen.empty {
+    aspect-ratio: 4 / 3;
+    background: #0d1012;
+  }
+  /* A real capture fills the panel's remaining space and scales to fit
+     whichever dimension is limiting (object-fit: contain) - never cropped,
+     never scrolled. min-height:0 lets the box shrink so nothing overflows. */
+  .screen:not(.empty) {
+    flex: 1;
+    min-height: 0;
+    background: var(--inset);
+  }
   img {
+    /* Absolutely fill the (flex-sized) .screen so the image never feeds its
+       intrinsic height back into the layout; contain scales it to fit. */
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
-    display: block;
   }
   .grat {
     position: absolute;

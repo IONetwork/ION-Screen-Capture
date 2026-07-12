@@ -1,6 +1,6 @@
 // Typed wrappers over the Tauri command/event surface.
 // Types mirror the serde DTOs in `src-tauri/src/{events,commands,instrument,discovery}`.
-// The app's sole feature is screen capture — no measurement/readout.
+// The app's sole feature is screen capture - no measurement/readout.
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";

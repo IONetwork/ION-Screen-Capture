@@ -14,7 +14,7 @@ use crate::events;
 use crate::instrument::ImageFormat;
 
 /// A key binding sent from the UI. `code` is a W3C `KeyboardEvent.code`
-/// (e.g. `PrintScreen`, `KeyS`, `F9`) — the same names `keyboard-types` parses.
+/// (e.g. `PrintScreen`, `KeyS`, `F9`) - the same names `keyboard-types` parses.
 #[derive(Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShortcutSpec {

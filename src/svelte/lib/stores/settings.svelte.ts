@@ -1,4 +1,4 @@
-// App settings (runes) — capture destination + options, persisted via the store
+// App settings (runes) - capture destination + options, persisted via the store
 // plugin. The backend reads the same `settings.json` for the global hotkey.
 
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -16,15 +16,20 @@ class SettingsStore {
   saveDir = $state("");
   saveToDisk = $state(false);
   copyToClipboard = $state(false);
-  // Capture options — persisted so the global hotkey uses the same choices as
+  // Capture options - persisted so the global hotkey uses the same choices as
   // the UI. Format is corrected to a supported one on connect (CapturePanel).
   format = $state<ImageFormat>("PNG");
   color = $state(true);
   invert = $state(false);
+  /** Return the instrument to LOCAL after each capture / on disconnect (default off). */
+  unlockAfterCapture = $state(false);
   hotkeyEnabled = $state(false);
+  checkUpdates = $state(true);
   hotkeyShortcut = $state<ShortcutSpec>({ ...DEFAULT_SHORTCUT });
   /** Last hotkey registration error (e.g. combo already taken by another app). */
   hotkeyError = $state<string | null>(null);
+  /** Explicit light/dark choice, or null to follow the OS (prefers-color-scheme). */
+  theme = $state<"light" | "dark" | null>(null);
 
   #store: Store | null = null;
   #ready = false;
@@ -41,7 +46,10 @@ class SettingsStore {
       this.format = (await store.get<ImageFormat>("format")) ?? "PNG";
       this.color = (await store.get<boolean>("color")) ?? true;
       this.invert = (await store.get<boolean>("invert")) ?? false;
+      this.unlockAfterCapture = (await store.get<boolean>("unlockAfterCapture")) ?? false;
       this.hotkeyEnabled = (await store.get<boolean>("hotkeyEnabled")) ?? false;
+      this.checkUpdates = (await store.get<boolean>("checkUpdates")) ?? true;
+      this.theme = (await store.get<"light" | "dark">("theme")) ?? null;
       this.hotkeyShortcut = (await store.get<ShortcutSpec>("hotkeyShortcut")) ?? {
         ...DEFAULT_SHORTCUT,
       };
@@ -84,6 +92,18 @@ class SettingsStore {
   setInvert(v: boolean) {
     this.invert = v;
     this.#save("invert", v);
+  }
+  setUnlockAfterCapture(v: boolean) {
+    this.unlockAfterCapture = v;
+    this.#save("unlockAfterCapture", v);
+  }
+  setCheckUpdates(v: boolean) {
+    this.checkUpdates = v;
+    this.#save("checkUpdates", v);
+  }
+  setTheme(v: "light" | "dark") {
+    this.theme = v;
+    this.#save("theme", v);
   }
   async setHotkey(v: boolean) {
     this.hotkeyEnabled = v;

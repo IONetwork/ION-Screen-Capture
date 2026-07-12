@@ -11,6 +11,17 @@ fn default_true() -> bool {
     true
 }
 
+/// Whether to return the instrument to LOCAL after a capture / on disconnect -
+/// the "Unlock after capture" setting (default off), read from settings.json.
+pub(crate) fn unlock_after_capture(app: &AppHandle) -> bool {
+    use tauri_plugin_store::StoreExt;
+    app.store("settings.json")
+        .ok()
+        .and_then(|s| s.get("unlockAfterCapture"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CaptureRequest {
@@ -68,7 +79,18 @@ pub async fn perform_capture(app: &AppHandle, req: CaptureRequest) -> AppResult<
             color: req.color,
             invert: req.invert,
         };
-        conn.screen.capture(&mut conn.transport, &opts).await?
+        let raw = conn.screen.capture(&mut conn.transport, &opts).await?;
+        // Optionally hand the instrument back to LOCAL (front panel usable),
+        // gated by the "Unlock after capture" setting (default off). Best-effort -
+        // never turns a successful capture into a failure. Most instruments have
+        // a raw-socket command; Truevolt DMMs need the VXI-11 device_local RPC.
+        if unlock_after_capture(app) {
+            let _ = conn.screen.go_local(&mut conn.transport).await;
+            if conn.screen.wants_vxi11_local() {
+                let _ = crate::discovery::vxi11::device_local(conn.addr.ip()).await;
+            }
+        }
+        raw
     };
 
     // Retain the original bytes so the UI can copy/save this capture on demand
@@ -124,7 +146,7 @@ fn copy_image_to_clipboard(app: &AppHandle, bytes: &[u8]) -> AppResult<bool> {
 }
 
 /// Build a `data:` URL the webview can render. TIFF isn't displayable in an
-/// `<img>`, so transcode it to PNG for the preview only — the saved file and
+/// `<img>`, so transcode it to PNG for the preview only - the saved file and
 /// clipboard still use the original captured bytes.
 fn preview_data_url(format: ImageFormat, bytes: &[u8]) -> String {
     use base64::engine::general_purpose::STANDARD;
@@ -162,7 +184,7 @@ pub async fn copy_last_capture(app: AppHandle) -> AppResult<()> {
 }
 
 /// Write the most recent capture to `path` (UI "Save image as…" action). The
-/// original captured bytes are written verbatim — correct for the chosen format.
+/// original captured bytes are written verbatim - correct for the chosen format.
 #[tauri::command]
 pub async fn save_last_capture(app: AppHandle, path: String) -> AppResult<String> {
     let state = app.state::<AppState>();

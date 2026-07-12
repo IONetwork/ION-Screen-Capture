@@ -27,8 +27,15 @@
       <Button size="sm" onclick={() => settings.chooseDir()}>Browse</Button>
     </Field>
     <div class="rule"></div>
-    <Field label="Copy to clipboard" hint="also copy the image on capture">
+    <Field label="Copy to clipboard" hint="copy the image after capture">
       <Switch checked={settings.copyToClipboard} onCheckedChange={(v) => settings.setCopyToClipboard(v)} />
+    </Field>
+    <Field label="Unlock after capture" hint="return the instrument's front panel to local">
+      <Switch checked={settings.unlockAfterCapture} onCheckedChange={(v) => settings.setUnlockAfterCapture(v)} />
+    </Field>
+    <div class="rule"></div>
+    <Field label="Search for updates on startup" hint="notify me when a new version is available">
+      <Switch checked={settings.checkUpdates} onCheckedChange={(v) => settings.setCheckUpdates(v)} />
     </Field>
     <Field label="Global hotkey" hint="capture from anywhere, even unfocused">
       <Switch checked={settings.hotkeyEnabled} onCheckedChange={(v) => settings.setHotkey(v)} />

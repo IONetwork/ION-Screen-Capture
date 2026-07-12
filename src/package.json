@@ -1,9 +1,9 @@
 {
   "name": "ion-screen-capture",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "ION Screen Capture — capture screens from SCPI/LXI instruments over the network (Tauri + Svelte)",
+  "description": "ION Screen Capture - capture screens from SCPI/LXI instruments over the network (Tauri + Svelte)",
   "scripts": {
     "dev": "vite --config svelte/vite.config.ts",
     "build": "vite build --config svelte/vite.config.ts",
@@ -17,6 +17,7 @@
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-fs": "^2",
     "@tauri-apps/plugin-global-shortcut": "^2",
+    "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-store": "^2",
     "bits-ui": "^2"
   },

@@ -1,9 +1,9 @@
-//! DMM screen-capture drivers (screendump — NOT measurement).
+//! DMM screen-capture drivers (screendump - NOT measurement).
 //!
 //! DMMs with a display expose a screenshot over SCPI:
 //! - Keysight Truevolt + Rigol DM858 → `HCOPy:SDUMp:DATA?` (IEEE 488.2 block, PNG/BMP).
 //! - Rigol DM3068 → `:DISP:DATA?` (IEEE 488.2 block, BMP).
-//! - Siglent SDM → `SCDP` (bare BMP, no framing — truncate via the BMP size field).
+//! - Siglent SDM → `SCDP` (bare BMP, no framing - truncate via the BMP size field).
 
 use async_trait::async_trait;
 
@@ -39,6 +39,11 @@ impl ScreenCapture for TruevoltDump {
     fn supported_formats(&self) -> &'static [ImageFormat] {
         PNG_BMP
     }
+    // No raw-socket local command exists on Truevolt DMMs (Keysight 34461A,
+    // Rigol DM858); the command layer clears "Rmt" via VXI-11 device_local.
+    fn wants_vxi11_local(&self) -> bool {
+        true
+    }
     async fn capture(&self, io: &mut dyn ScpiIo, opts: &CaptureOptions) -> AppResult<RawCapture> {
         let (token, format) = match opts.format {
             ImageFormat::Bmp24 | ImageFormat::Bmp8 => ("BMP", ImageFormat::Bmp24),
@@ -55,13 +60,16 @@ impl ScreenCapture for TruevoltDump {
     }
 }
 
-/// Rigol DM3068 — `:DISP:DATA?` (no args) → BMP definite-length block.
+/// Rigol DM3068 - `:DISP:DATA?` (no args) → BMP definite-length block.
 struct RigolDispData;
 
 #[async_trait]
 impl ScreenCapture for RigolDispData {
     fn supported_formats(&self) -> &'static [ImageFormat] {
         BMP_ONLY
+    }
+    async fn go_local(&self, io: &mut dyn ScpiIo) -> AppResult<()> {
+        io.write_line(":SYSTem:LOCal").await
     }
     async fn capture(&self, io: &mut dyn ScpiIo, _opts: &CaptureOptions) -> AppResult<RawCapture> {
         let bytes = io.query_block(":DISP:DATA?").await?;
@@ -74,13 +82,16 @@ impl ScreenCapture for RigolDispData {
     }
 }
 
-/// Siglent SDM — `SCDP` → bare BMP (no framing).
+/// Siglent SDM - `SCDP` → bare BMP (no framing).
 struct SiglentScdp;
 
 #[async_trait]
 impl ScreenCapture for SiglentScdp {
     fn supported_formats(&self) -> &'static [ImageFormat] {
         BMP_ONLY
+    }
+    async fn go_local(&self, io: &mut dyn ScpiIo) -> AppResult<()> {
+        io.write_line(":SYSTem:REMote OFF").await
     }
     async fn capture(&self, io: &mut dyn ScpiIo, _opts: &CaptureOptions) -> AppResult<RawCapture> {
         io.write_line("SCDP").await?;

@@ -3,7 +3,7 @@
 //! Save the screen to the scope's internal disk, wait for completion, read the
 //! file back over the socket (a bare PNG with no length header), then delete it.
 //! Requires `SOCKETServer:PROTOCol NONe` (the default on 4/5/6 Series).
-//! (The older MSO/DPO4000 family — set FILEFormat + USB path — is a future add.)
+//! (The older MSO/DPO4000 family - set FILEFormat + USB path - is a future add.)
 
 use async_trait::async_trait;
 
@@ -20,6 +20,9 @@ const REMOTE: &str = "\"C:/Temp/ion_capture.png\"";
 impl ScreenCapture for Tektronix {
     fn supported_formats(&self) -> &'static [ImageFormat] {
         FORMATS
+    }
+    async fn go_local(&self, io: &mut dyn ScpiIo) -> AppResult<()> {
+        io.write_line("UNLock ALL").await
     }
 
     async fn capture(&self, io: &mut dyn ScpiIo, _opts: &CaptureOptions) -> AppResult<RawCapture> {

@@ -42,10 +42,12 @@ pub async fn connect(
     ip: String,
     port: Option<u16>,
 ) -> AppResult<ConnectionInfo> {
+    // Connecting while already connected SWITCHES instruments. The current
+    // connection stays in `guard` until the new one is fully established below,
+    // so a failed switch leaves you on the existing instrument. Assigning the
+    // new Connection then drops the old one, closing its socket - which releases
+    // single-session gear (e.g. Rigol raw sockets) cleanly.
     let mut guard = state.conn.lock().await;
-    if let Some(existing) = guard.as_ref() {
-        return Err(AppError::AlreadyConnected(existing.addr.to_string()));
-    }
 
     // Discovered devices supply their port; manual connects default to 5025
     // (the IANA scpi-raw port). Rigol=5555 / Tektronix=4000 must be specified.
@@ -72,6 +74,9 @@ pub async fn connect(
     *guard = Some(conn);
     drop(guard);
 
+    // The previous instrument's retained capture is now stale (copy/save-last).
+    *state.last_capture.lock().await = None;
+
     let _ = app.emit(events::CONNECTION_CHANGED, Some(info.clone()));
     Ok(info)
 }
@@ -80,6 +85,16 @@ pub async fn connect(
 pub async fn disconnect(app: AppHandle, state: State<'_, AppState>) -> AppResult<()> {
     {
         let mut guard = state.conn.lock().await;
+        if let Some(conn) = guard.as_mut() {
+            // Release the instrument to LOCAL before closing the socket, but only
+            // if "Unlock after capture" is enabled. Best-effort.
+            if crate::commands::capture::unlock_after_capture(&app) {
+                let _ = conn.screen.go_local(&mut conn.transport).await;
+                if conn.screen.wants_vxi11_local() {
+                    let _ = crate::discovery::vxi11::device_local(conn.addr.ip()).await;
+                }
+            }
+        }
         *guard = None;
     }
     let _ = app.emit(events::CONNECTION_CHANGED, Option::<ConnectionInfo>::None);

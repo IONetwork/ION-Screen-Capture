@@ -9,7 +9,7 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig((): UserConfig => ({
   plugins: [svelte()],
 
-  // Vite's root is this folder (src/svelte) — index.html, public/, and all
+  // Vite's root is this folder (src/svelte) - index.html, public/, and all
   // sources live here. Invoked from the repo root via `--config`.
   root: import.meta.dirname,
 

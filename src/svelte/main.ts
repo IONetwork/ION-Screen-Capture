@@ -2,7 +2,7 @@ import { mount } from "svelte";
 import "./app.css";
 import App from "./App.svelte";
 
-// Desktop app — suppress the WebView's default right-click menu
+// Desktop app - suppress the WebView's default right-click menu
 // (Back / Refresh / Print / Inspect).
 window.addEventListener("contextmenu", (e) => e.preventDefault());
 
