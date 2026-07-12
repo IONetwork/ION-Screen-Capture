@@ -15,7 +15,7 @@ export function errMsg(e: unknown): string {
 }
 
 export type Vendor = "rigol" | "siglent" | "keysight" | "tektronix" | "unknown";
-export type InstrumentClass = "oscilloscope" | "dmm" | "other";
+export type InstrumentClass = "oscilloscope" | "dmm" | "awg" | "other";
 export type ImageFormat = "PNG" | "BMP24" | "BMP8" | "JPEG" | "TIFF";
 export type DiscoverySource = "mdns" | "sweep" | "vxi11";
 

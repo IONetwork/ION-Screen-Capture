@@ -19,6 +19,7 @@ pub enum Vendor {
 pub enum Class {
     Oscilloscope,
     Dmm,
+    Awg,
     Other,
 }
 
@@ -106,6 +107,11 @@ pub fn detect_class(vendor: Vendor, idn: &Idn) -> Class {
         return Class::Dmm;
     }
 
+    // Rigol DG models: function/arbitrary waveform generator (screenshot via :HCOPy).
+    if matches!(vendor, Vendor::Rigol) && model.starts_with("DG") {
+        return Class::Awg;
+    }
+
     let is_scope = match vendor {
         Vendor::Keysight => {
             model.starts_with("DSO") || model.starts_with("MSO") || model.starts_with("EDUX")
@@ -168,6 +174,14 @@ mod tests {
 
         let s = idn("Siglent Technologies", "SDM3065X");
         assert_eq!(detect_class(Vendor::Siglent, &s), Class::Dmm);
+    }
+
+    #[test]
+    fn classifies_rigol_awg() {
+        let g = idn("Rigol Technologies", "DG932");
+        assert_eq!(detect_vendor(&g), Vendor::Rigol);
+        assert_eq!(detect_class(Vendor::Rigol, &g), Class::Awg);
+        assert_eq!(detect_class(Vendor::Rigol, &idn("Rigol", "DG812")), Class::Awg);
     }
 
     #[test]
