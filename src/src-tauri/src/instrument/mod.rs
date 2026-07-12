@@ -5,6 +5,7 @@
 //! SCPI is supported through a per-family `ScreenCapture` driver; instruments
 //! that can't produce a screenshot are not supported.
 
+pub mod awg;
 pub mod dmm;
 pub mod idn;
 pub mod scope;
@@ -101,6 +102,7 @@ pub fn make_screen(vendor: Vendor, class: Class, model: &str) -> AppResult<Box<d
     match class {
         Class::Oscilloscope => scope::make_scope(vendor),
         Class::Dmm => dmm::make_dmm(vendor, model),
+        Class::Awg => awg::make_awg(vendor),
         Class::Other => Err(AppError::Unsupported {
             vendor: format!("{vendor:?}"),
             what: "screen capture for this instrument".into(),
