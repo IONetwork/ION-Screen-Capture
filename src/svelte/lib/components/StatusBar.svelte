@@ -1,6 +1,7 @@
 <script lang="ts">
   import { connection } from "$lib/stores/connection.svelte";
   import { discovery } from "$lib/stores/discovery.svelte";
+  import { update } from "$lib/stores/update.svelte";
 </script>
 
 <footer class="statusbar">
@@ -21,7 +22,8 @@
     </span>
   </span>
   <span class="right mono">
-    {discovery.devices.length} found
+    <span>{discovery.devices.length} found</span>
+    {#if update.current}<span class="ver">v{update.current}</span>{/if}
   </span>
 </footer>
 
@@ -37,10 +39,14 @@
     font-size: 11px;
     color: var(--ink-2);
   }
-  .left {
+  .left,
+  .right {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+  .ver {
+    color: var(--ink-3);
   }
   .dot {
     width: 7px;

@@ -1,6 +1,7 @@
 // Startup update check (runes). Frontend-only: reads the running app version and
 // asks GitHub for the latest release. Fails silently (offline, rate-limited, no
-// releases, plain browser) and never blocks startup. Gated by settings.checkUpdates.
+// releases, plain browser) and never blocks startup. The version is always read;
+// the GitHub release check is gated by settings.checkUpdates.
 
 import { settings } from "$lib/stores/settings.svelte";
 
@@ -33,10 +34,16 @@ class UpdateStore {
     this.#started = true;
     // Caller awaits settings.init() first, so this reads the persisted value,
     // not the default (see App.svelte onMount chaining).
-    if (!settings.checkUpdates) return;
+    // Always read the running version (shown in the status bar), even when the
+    // update check is disabled.
     try {
       const { getVersion } = await import("@tauri-apps/api/app");
       this.current = await getVersion(); // throws in a plain browser → caught
+    } catch {
+      /* plain browser: no version available */
+    }
+    if (!settings.checkUpdates) return;
+    try {
       const res = await fetch(RELEASES_API, {
         headers: { Accept: "application/vnd.github+json" },
       });
@@ -46,7 +53,7 @@ class UpdateStore {
       this.url = typeof j.html_url === "string" ? j.html_url : null;
       this.available = !!this.current && isNewer(this.latest, this.current);
     } catch {
-      /* offline / rate-limited / no releases / plain browser */
+      /* offline / rate-limited / no releases */
     }
   }
 
