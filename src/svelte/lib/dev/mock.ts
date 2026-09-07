@@ -99,5 +99,11 @@ export function seedMock() {
     dataUrl: SCOPE_SCREEN,
     savedPath: null,
     copiedToClipboard: false,
+    // No reduction in the mock: this seeds the UI for layout review, and a
+    // pending reduction would send the settle path looking for a backend.
+    pendingReduction: false,
+    captureToken: null,
+    reduced: false,
+    reduceError: null,
   };
 }

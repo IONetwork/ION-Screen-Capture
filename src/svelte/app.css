@@ -266,6 +266,72 @@ textarea,
   box-shadow: var(--shadow);
 }
 
+/* Select (dropdown). Mirrors .seg sizing so a dialog row with a Select lines
+   up with one holding a SegmentedControl. */
+.sel-trigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 82px;
+  height: 26px;
+  padding: 0 0.45rem;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--inset);
+  color: var(--ink);
+  cursor: pointer;
+}
+.sel-trigger:hover:not(:disabled) {
+  border-color: var(--line-2);
+}
+.sel-trigger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sel-trigger[data-state="open"] {
+  border-color: var(--accent);
+}
+.sel-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sel-content {
+  z-index: 45;
+  min-width: var(--bits-select-anchor-width, 82px);
+  padding: 2px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(16, 19, 23, 0.22);
+}
+.sel-item {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 0.5rem;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+.sel-item[data-highlighted] {
+  background: var(--inset);
+  color: var(--ink);
+}
+.sel-item[data-selected] {
+  color: var(--accent);
+}
+
+
 /* Text field */
 .field {
   font: inherit;
@@ -334,6 +400,15 @@ textarea,
 }
 .dlg-body {
   padding: 0.9rem;
+}
+/* Mirrors .dlg-head: same padding, border on the top instead of the bottom. */
+.dlg-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid var(--line);
 }
 
 .icon {

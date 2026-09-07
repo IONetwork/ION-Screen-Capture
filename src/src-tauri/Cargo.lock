@@ -1874,7 +1874,7 @@ dependencies = [
 
 [[package]]
 name = "ion-screen-capture"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -1883,6 +1883,7 @@ dependencies = [
  "if-addrs",
  "image",
  "mdns-sd",
+ "png 0.18.1",
  "serde",
  "serde_json",
  "tauri",

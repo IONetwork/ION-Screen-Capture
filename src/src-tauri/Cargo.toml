@@ -1,6 +1,6 @@
 [package]
 name = "ion-screen-capture"
-version = "0.3.2"
+version = "0.4.0"
 description = "ION Screen Capture - screen capture from SCPI/LXI instruments over the network"
 authors = ["ION"]
 edition = "2024"
@@ -38,6 +38,9 @@ thiserror = "2"
 base64 = "0.22"
 chrono = { version = "0.4", features = ["clock"] }
 image = { version = "0.25", default-features = false, features = ["png", "bmp", "jpeg", "tiff"] }
+# Indexed (PLTE) PNG writing, which `image` cannot do. Already in the lock file
+# at this version via `image`, so this adds no new build.
+png = "0.18"
 
 # Global shortcut is desktop-only.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

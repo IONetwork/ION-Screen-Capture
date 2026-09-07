@@ -8,9 +8,32 @@ import {
   errMsg,
   setHotkey as ipcSetHotkey,
   setShortcut as ipcSetShortcut,
+  type ColorSpace,
   type ImageFormat,
   type ShortcutSpec,
 } from "$lib/ipc";
+
+/**
+ * Palette sizes offered in Settings. 256 is the ceiling: an indexed PNG has
+ * indices 0..255, so 256 entries, and nothing needs reserving because captures
+ * are opaque and the reducer runs with alpha ignored.
+ */
+export const PALETTE_SIZES = [8, 16, 32, 64, 256] as const;
+
+/**
+ * Snap a stored or incoming value onto the offered set.
+ *
+ * A previously persisted size that is no longer offered (the control used to be
+ * a free-text field) would otherwise leave the dropdown showing nothing, so pick
+ * the nearest legal option instead.
+ */
+function snapColors(v: unknown): number {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 64;
+  return PALETTE_SIZES.reduce((best, s) =>
+    Math.abs(s - n) < Math.abs(best - n) ? s : best,
+  );
+}
 
 class SettingsStore {
   saveDir = $state("");
@@ -21,6 +44,32 @@ class SettingsStore {
   format = $state<ImageFormat>("PNG");
   color = $state(true);
   invert = $state(false);
+  /**
+   * "Reduced Color": quantise the capture to a small palette and write it as an
+   * indexed PNG. Persisted like the other capture options so the global hotkey
+   * uses the same choice as the UI.
+   */
+  reducedColor = $state(false);
+  /**
+   * Palette size, 2..256. 64 is the measured optimum on instrument screens: on
+   * the project's own screenshots it is both the smallest indexed PNG (38% of
+   * the original) and visually indistinguishable. Fewer colours is bigger, not
+   * smaller, because the extra dithering needed to fake the missing colours
+   * costs more than the shorter palette saves.
+   */
+  reduceColors = $state(64);
+  /**
+   * Error-diffusion dithering during reduction.
+   *
+   * Measured on a real DS1104Z capture, turning this off is smaller *and*
+   * higher quality at every palette size (at 64 colours: 15331 B against
+   * 16774 B, 55.5 dB against 53.3 dB), because an adaptive palette already
+   * lands almost exactly on flat instrument UI and there is nothing to smooth.
+   * It earns its keep on genuine gradients, which some newer scopes render.
+   */
+  reduceDither = $state(true);
+  /** Working space the reducer measures colour distance in. */
+  reduceSpace = $state<ColorSpace>("oklab");
   /** Return the instrument to LOCAL after each capture / on disconnect (default off). */
   unlockAfterCapture = $state(false);
   hotkeyEnabled = $state(false);
@@ -46,6 +95,10 @@ class SettingsStore {
       this.format = (await store.get<ImageFormat>("format")) ?? "PNG";
       this.color = (await store.get<boolean>("color")) ?? true;
       this.invert = (await store.get<boolean>("invert")) ?? false;
+      this.reducedColor = (await store.get<boolean>("reducedColor")) ?? false;
+      this.reduceColors = snapColors((await store.get<number>("reduceColors")) ?? 64);
+      this.reduceDither = (await store.get<boolean>("reduceDither")) ?? true;
+      this.reduceSpace = (await store.get<ColorSpace>("reduceSpace")) ?? "oklab";
       this.unlockAfterCapture = (await store.get<boolean>("unlockAfterCapture")) ?? false;
       this.hotkeyEnabled = (await store.get<boolean>("hotkeyEnabled")) ?? false;
       this.checkUpdates = (await store.get<boolean>("checkUpdates")) ?? true;
@@ -92,6 +145,23 @@ class SettingsStore {
   setInvert(v: boolean) {
     this.invert = v;
     this.#save("invert", v);
+  }
+  setReducedColor(v: boolean) {
+    this.reducedColor = v;
+    this.#save("reducedColor", v);
+  }
+  setReduceColors(v: number) {
+    const n = snapColors(v);
+    this.reduceColors = n;
+    this.#save("reduceColors", n);
+  }
+  setReduceDither(v: boolean) {
+    this.reduceDither = v;
+    this.#save("reduceDither", v);
+  }
+  setReduceSpace(v: ColorSpace) {
+    this.reduceSpace = v;
+    this.#save("reduceSpace", v);
   }
   setUnlockAfterCapture(v: boolean) {
     this.unlockAfterCapture = v;
