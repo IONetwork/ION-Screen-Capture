@@ -4,12 +4,17 @@
      the image opens a small custom menu (the WebView's default menu is
      suppressed app-wide). -->
 <script lang="ts">
+  import Spinner from "$lib/ui/Spinner.svelte";
+
   interface Props {
     src?: string | null;
+    /** A capture is in flight. Dims whatever is showing and covers it. */
+    busy?: boolean;
+    busyLabel?: string;
     onCopy?: () => void;
     onSave?: () => void;
   }
-  let { src = null, onCopy, onSave }: Props = $props();
+  let { src = null, busy = false, busyLabel, onCopy, onSave }: Props = $props();
 
   const vLines = [40, 80, 120, 160, 240, 280, 320, 360];
   const hLines = [30, 60, 90, 120, 180, 210, 240, 270];
@@ -17,7 +22,7 @@
   let menu = $state<{ x: number; y: number } | null>(null);
   let firstItem = $state<HTMLButtonElement | null>(null);
 
-  const hasMenu = $derived(!!src && (!!onCopy || !!onSave));
+  const hasMenu = $derived(!!src && !busy && (!!onCopy || !!onSave));
 
   function openMenu(e: MouseEvent) {
     if (!hasMenu) return;
@@ -71,6 +76,11 @@
     <span class="corner bl"></span>
     <span class="corner br"></span>
   {/if}
+  {#if busy}
+    <div class="busy">
+      <Spinner size={22} label={busyLabel} />
+    </div>
+  {/if}
 </div>
 
 {#if menu}
@@ -123,6 +133,17 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+  /* Sits over the image (or the graticule) rather than replacing it: a capture
+     already on screen stays recognisable while the next one is being made, and
+     no intermediate frame of the new one is ever shown. */
+  .busy {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    background: rgba(13, 16, 18, 0.58);
   }
   .grat {
     position: absolute;

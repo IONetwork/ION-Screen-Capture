@@ -126,6 +126,7 @@ fn request_from_settings(app: &AppHandle) -> CaptureRequest {
     let mut format = None;
     let mut color = true;
     let mut invert = false;
+    let mut reduce = false;
     if let Ok(store) = app.store("settings.json") {
         if store.get("saveToDisk").and_then(|v| v.as_bool()).unwrap_or(false) {
             save_dir = store
@@ -143,6 +144,10 @@ fn request_from_settings(app: &AppHandle) -> CaptureRequest {
             .and_then(|v| serde_json::from_value::<ImageFormat>(v).ok());
         color = store.get("color").and_then(|v| v.as_bool()).unwrap_or(true);
         invert = store.get("invert").and_then(|v| v.as_bool()).unwrap_or(false);
+        reduce = store
+            .get("reducedColor")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
     }
     CaptureRequest {
         format,
@@ -150,6 +155,7 @@ fn request_from_settings(app: &AppHandle) -> CaptureRequest {
         invert,
         save_dir,
         copy_to_clipboard,
+        reduce,
     }
 }
 

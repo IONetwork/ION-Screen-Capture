@@ -12,9 +12,19 @@
     "moduleDetection": "force",
     "paths": {
       "$lib": ["./lib"],
-      "$lib/*": ["./lib/*"]
+      "$lib/*": ["./lib/*"],
+      // Vendored library: type-check against its hand-written declarations
+      // rather than its JSDoc, which is not written to survive checkJs.
+      "img_reduce": ["./lib/img_reduce/index.d.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.js", "**/*.svelte"],
-  "exclude": ["vite.config.ts", "svelte.config.js"]
+  "exclude": [
+    "vite.config.ts",
+    "svelte.config.js",
+    // Third-party vendored source. checkJs would otherwise apply this project's
+    // strictness to another project's JSDoc, which produced 292 errors and broke
+    // `npm run check`. Its types come from index.d.ts via the path mapping above.
+    "lib/img_reduce/**"
+  ]
 }
