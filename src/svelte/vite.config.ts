@@ -16,7 +16,17 @@ export default defineConfig((): UserConfig => ({
   resolve: {
     alias: {
       $lib: path.resolve(import.meta.dirname, "lib"),
+      // Bare specifier so tsconfig's `paths` can point type resolution at the
+      // vendored library's index.d.ts while Vite bundles the real ESM.
+      img_reduce: path.resolve(import.meta.dirname, "lib/img_reduce/index.js"),
     },
+  },
+
+  // The colour reducer runs in a module worker. Vite 8 defaults worker output
+  // to 'iife', which mismatches dev (native ESM workers) against build and
+  // fails if the worker chunk ever needs code splitting.
+  worker: {
+    format: "es",
   },
 
   // Prevent Vite from obscuring Rust errors.

@@ -31,6 +31,8 @@ pub enum AppError {
     Io(#[from] std::io::Error),
     #[error("filesystem error: {0}")]
     Fs(String),
+    #[error("image error: {0}")]
+    Image(String),
 }
 
 impl AppError {
@@ -49,6 +51,7 @@ impl AppError {
             AppError::Mdns(_) => "Mdns",
             AppError::Io(_) => "Io",
             AppError::Fs(_) => "Fs",
+            AppError::Image(_) => "Image",
         }
     }
 }

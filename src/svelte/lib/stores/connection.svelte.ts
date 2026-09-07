@@ -2,12 +2,14 @@
 
 import { save as saveDialog } from "@tauri-apps/plugin-dialog";
 import {
+  abandonReduction,
   capture as ipcCapture,
   connect as ipcConnect,
   connectionStatus,
   copyLastCapture,
   disconnect as ipcDisconnect,
   errMsg,
+  finalizeReducedCapture,
   onCaptureDone,
   onCaptureError,
   onConnectionChanged,
@@ -16,6 +18,7 @@ import {
   type ConnectionInfo,
   type ImageFormat,
 } from "$lib/ipc";
+import { reduceDataUrl } from "$lib/reduce";
 import { settings } from "$lib/stores/settings.svelte";
 
 /** File extension for a captured image format (JPEG→jpg, TIFF→tif). */
@@ -46,6 +49,8 @@ class ConnectionStore {
   error = $state<string | null>(null);
   lastCapture = $state<CaptureResponse | null>(null);
   capturing = $state(false);
+  /** Colour reduction is running in the worker after a capture. */
+  reducing = $state(false);
   /** Transient one-line confirmation ("Copied", "Saved"); clears itself. */
   flash = $state<string | null>(null);
 
@@ -64,9 +69,12 @@ class ConnectionStore {
       this.info = info;
       if (!info) this.lastCapture = null;
     });
-    // Captures triggered by the global hotkey arrive as events.
+    // Captures triggered by the global hotkey arrive as events. They go through
+    // the same settle path, so a hotkey capture reduces exactly like a clicked
+    // one - which matters, because taking a run of screenshots from the hotkey
+    // is the workflow reduction is most useful for.
     await onCaptureDone((resp) => {
-      this.lastCapture = resp;
+      void this.#settle(resp);
     });
     await onCaptureError((err) => {
       this.error = err.message;
@@ -103,6 +111,7 @@ class ConnectionStore {
     invert?: boolean;
     saveDir?: string | null;
     copyToClipboard?: boolean;
+    reduce?: boolean;
   }) {
     const info = this.info;
     if (!info) return;
@@ -110,18 +119,75 @@ class ConnectionStore {
       opts?.format ?? (info.supportedFormats.includes("PNG") ? "PNG" : (info.supportedFormats[0] ?? "PNG"));
     this.capturing = true;
     this.error = null;
+    let resp: CaptureResponse | null = null;
     try {
-      this.lastCapture = await ipcCapture({
+      resp = await ipcCapture({
         format,
         color: opts?.color ?? true,
         invert: opts?.invert ?? false,
         saveDir: opts?.saveDir ?? null,
         copyToClipboard: opts?.copyToClipboard ?? false,
+        reduce: opts?.reduce ?? false,
       });
     } catch (e) {
       this.error = errMsg(e);
     } finally {
       this.capturing = false;
+    }
+    // Settle outside the `capturing` window on purpose: it owns the `reducing`
+    // flag, and the two phases drive different button labels. Awaiting it inside
+    // the try above would leave `capturing` true for the whole reduction, so
+    // "Reducing…" would never actually appear.
+    if (resp) await this.#settle(resp);
+  }
+
+  /**
+   * Install a capture response, then finish the reduction if one is owed.
+   *
+   * The preview is assigned first and shows the unreduced image straight away,
+   * so perceived capture latency does not change. When the reduction lands, the
+   * whole response is replaced rather than patched: the new one carries the
+   * reduced bytes' format, size and data URL together, which is what keeps the
+   * preview, the meta line and right-click Save consistent. Patching fields
+   * individually is how you end up offering a .bmp filename for a PNG.
+   */
+  async #settle(resp: CaptureResponse) {
+    // Nothing owed: publish straight away, exactly as before.
+    if (!resp.pendingReduction || resp.captureToken == null) {
+      this.lastCapture = resp;
+      return;
+    }
+
+    // A reduction is owed, so hold this response back. Publishing it first
+    // would render the unreduced capture for the 100-450 ms the reducer takes,
+    // which reads as a flash of the wrong image. `reducing` drives the spinner
+    // over the preview for that window instead.
+    const token = resp.captureToken;
+    this.reducing = true;
+    try {
+      const reduced = await reduceDataUrl(resp.dataUrl, {
+        colors: settings.reduceColors,
+        space: settings.reduceSpace,
+        dither: settings.reduceDither,
+      });
+      this.lastCapture = await finalizeReducedCapture(token, reduced.indices, reduced.palette);
+    } catch (e) {
+      // The backend is still holding a capture whose save and clipboard copy it
+      // deferred for us. Without this the file would silently never be written,
+      // and the UI would look like an ordinary successful capture.
+      const why = errMsg(e);
+      try {
+        this.lastCapture = await abandonReduction(token, why);
+        this.error = `Colour reduction failed, saved the original instead: ${why}`;
+      } catch (inner) {
+        // Abandon failed too, so nothing has been published. Fall back to the
+        // held response: the capture exists and must not vanish from the UI
+        // just because reducing and un-reducing both went wrong.
+        this.lastCapture = resp;
+        this.error = errMsg(inner);
+      }
+    } finally {
+      this.reducing = false;
     }
   }
 

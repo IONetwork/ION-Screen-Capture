@@ -18,6 +18,8 @@ export type Vendor = "rigol" | "siglent" | "keysight" | "tektronix" | "unknown";
 export type InstrumentClass = "oscilloscope" | "dmm" | "awg" | "other";
 export type ImageFormat = "PNG" | "BMP24" | "BMP8" | "JPEG" | "TIFF";
 export type DiscoverySource = "mdns" | "sweep" | "vxi11";
+/** Working space the colour reducer measures distance in. */
+export type ColorSpace = "oklab" | "srgb" | "linear";
 
 export interface Idn {
   manufacturer: string;
@@ -38,11 +40,18 @@ export interface ConnectionInfo {
 }
 
 export interface CaptureRequest {
+  /** What we ask the instrument to produce. */
   format: ImageFormat;
   color: boolean;
   invert: boolean;
   saveDir?: string | null;
   copyToClipboard: boolean;
+  /**
+   * "Reduced Color". The backend defers the save and the clipboard copy so they
+   * get the reduced image; the frontend owes it a `finalizeReducedCapture` or an
+   * `abandonReduction`.
+   */
+  reduce?: boolean;
 }
 
 export interface CaptureResponse {
@@ -53,6 +62,14 @@ export interface CaptureResponse {
   dataUrl: string;
   savedPath: string | null;
   copiedToClipboard: boolean;
+  /** Nothing has been saved or copied yet; the reduction is still owed. */
+  pendingReduction: boolean;
+  /** Pair this with finalizeReducedCapture / abandonReduction. */
+  captureToken: number | null;
+  /** These bytes are the reduction, not the instrument's own. */
+  reduced: boolean;
+  /** Reduction was requested but could not be delivered; the original was saved. */
+  reduceError: string | null;
 }
 
 export interface DiscoveredDevice {
@@ -103,9 +120,40 @@ export function capture(req: CaptureRequest): Promise<CaptureResponse> {
 export function copyLastCapture(): Promise<void> {
   return invoke<void>("copy_last_capture");
 }
-/** Write the most recent capture to `path` (original bytes, verbatim). */
+/** Write the most recent capture to `path` (retained bytes, verbatim). */
 export function saveLastCapture(path: string): Promise<string> {
   return invoke<string>("save_last_capture", { path });
+}
+
+/**
+ * Hand the reduced pixels back so the backend can encode an indexed PNG and run
+ * the save and clipboard copy it deferred.
+ *
+ * The payload is one flat buffer, `[token u32 LE][indices][palette]`, and that
+ * shape is load-bearing: Tauri only skips JSON encoding when the byte buffer is
+ * the *entire* argument. Nested in an object, a Uint8Array is serialised as a
+ * JSON number array instead. Measured on a 1024x600 screen, that is 2.6 MB and
+ * hundreds of milliseconds against 749 KB and under one.
+ */
+export function finalizeReducedCapture(
+  token: number,
+  indices: Uint8Array,
+  palette: Uint8Array,
+): Promise<CaptureResponse> {
+  const body = new Uint8Array(4 + indices.length + palette.length);
+  new DataView(body.buffer).setUint32(0, token, true);
+  body.set(indices, 4);
+  body.set(palette, 4 + indices.length);
+  return invoke<CaptureResponse>("finalize_reduced_capture", body);
+}
+
+/**
+ * Give up on reducing this capture and have the backend deliver the original.
+ * Called from the failure and timeout paths so a reduction that goes wrong
+ * cannot silently swallow a save the user asked for.
+ */
+export function abandonReduction(token: number, reason: string): Promise<CaptureResponse> {
+  return invoke<CaptureResponse>("abandon_reduction", { token, reason });
 }
 
 // --- commands: discovery ---

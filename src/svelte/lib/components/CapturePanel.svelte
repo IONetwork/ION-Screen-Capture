@@ -3,6 +3,7 @@
   import SegmentedControl from "$lib/ui/SegmentedControl.svelte";
   import Switch from "$lib/ui/Switch.svelte";
   import Icon from "$lib/ui/Icon.svelte";
+  import Spinner from "$lib/ui/Spinner.svelte";
   import Preview from "./Preview.svelte";
   import { connection } from "$lib/stores/connection.svelte";
   import { settings } from "$lib/stores/settings.svelte";
@@ -40,8 +41,19 @@
       copyToClipboard: settings.copyToClipboard,
       saveDir:
         settings.saveToDisk && settings.saveDir ? settings.saveDir : null,
+      reduce: settings.reducedColor,
     });
   }
+
+  // "Capturing" covers the instrument round trip, "Reducing" the palette work
+  // that follows it. Both keep the button disabled, so a second capture cannot
+  // land on a reduction that is still in flight.
+  const busyLabel = $derived(
+    connection.capturing ? "Capturing…" : connection.reducing ? "Reducing…" : "Capture",
+  );
+  const busy = $derived(connection.capturing || connection.reducing);
+  /** Same wording as the button, for the overlay over the preview. */
+  const busyText = $derived(connection.capturing ? "Capturing…" : "Reducing…");
 </script>
 
 {#if info}
@@ -84,22 +96,38 @@
           /><span>Invert</span>
         </label>
       {/if}
+      <label class="toggle">
+        <Switch
+          checked={settings.reducedColor}
+          onCheckedChange={(v) => settings.setReducedColor(v)}
+        /><span>Reduced Color</span>
+      </label>
       <div class="spacer"></div>
       <Button
         variant="primary"
-        disabled={connection.capturing}
+        disabled={busy}
         onclick={capture}
       >
-        <Icon name="capture" size={14} />
-        {connection.capturing ? "Capturing…" : "Capture"}
+        {#if busy}<Spinner size={12} />{:else}<Icon name="capture" size={14} />{/if}
+        {busyLabel}
       </Button>
     </div>
 
+    {#if settings.reducedColor}
+      <p class="notice">
+        Reduced Color writes an indexed PNG{settings.format !== "PNG"
+          ? `, not ${settings.format}`
+          : ""}. Palette size and color space are in Settings.
+      </p>
+    {/if}
+
     {#if connection.error}<p class="err">{connection.error}</p>{/if}
 
-    {#if cap}
+    {#if cap || busy}
       <Preview
-        src={cap.dataUrl}
+        src={cap?.dataUrl ?? null}
+        {busy}
+        busyLabel={busyText}
         onCopy={() => connection.copyImage()}
         onSave={() => connection.saveImageAs()}
       />
@@ -248,6 +276,16 @@
   }
   .spacer {
     flex: 1;
+  }
+  /* Shown whenever Reduced Color is on: the saved file is an indexed PNG
+     regardless of the Format control above it, which is worth saying out loud
+     rather than letting the user discover it from the file extension. */
+  .notice {
+    margin: 0.1rem 0 0;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--accent);
+    color: var(--ink-2);
+    font-size: 11px;
   }
   .err {
     margin: 0;

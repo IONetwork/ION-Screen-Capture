@@ -1,0 +1,46 @@
+img_reduce
+Copyright (c) 2026
+Licensed under the MIT License (see LICENSE).
+
+This library is an original implementation. It is not a port or derivative of
+ImageMagick, and contains no ImageMagick code. ImageMagick is used only by the
+optional benchmark harness in test/harness/, which shells out to the `magick`
+executable to decode images and to produce comparison baselines. ImageMagick is
+distributed under the ImageMagick License (Apache-2.0 style); see
+https://imagemagick.org/script/license.php
+
+Algorithm provenance
+--------------------
+
+Colour quantisation by variance minimisation:
+    Xiaolin Wu, "Efficient Statistical Computations for Optimal Color
+    Quantization", Graphics Gems II, Academic Press, 1991, pp. 126-133.
+
+Iterative centroid refinement (k-means / Lloyd's algorithm):
+    S. P. Lloyd, "Least squares quantization in PCM", IEEE Transactions on
+    Information Theory, vol. 28, no. 2, pp. 129-137, 1982.
+
+Error-diffusion dithering:
+    R. W. Floyd and L. Steinberg, "An adaptive algorithm for spatial greyscale",
+    Proceedings of the Society for Information Display, vol. 17, no. 2,
+    pp. 75-77, 1976.
+
+Space-filling-curve dithering:
+    Thiadmer Riemersma, "A Balanced Dithering Technique", C/C++ Users Journal,
+    December 1998.
+
+Hilbert curve index-to-coordinate conversion:
+    The standard iterative formulation, as described in
+    "Programming the Hilbert curve" (J. Skilling, 2004) and widely published.
+
+Ordered dithering matrix:
+    B. E. Bayer, "An optimum method for two-level rendition of continuous-tone
+    pictures", IEEE International Conference on Communications, 1973.
+
+Perceptual colour space:
+    Björn Ottosson, "A perceptual color space for image processing" (OkLab),
+    2020. https://bottosson.github.io/posts/oklab/
+    Published by the author into the public domain / under the MIT license.
+
+sRGB transfer function:
+    IEC 61966-2-1:1999.
